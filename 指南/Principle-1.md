@@ -3,6 +3,26 @@
 现在让我们深入了解这一原则：即编写明确和具体的指令。
 你应该通过提供尽可能明确和具体的指令来表达您想让模型做什么，这将指导模型朝着所需的输出方向并减少您获得无关或不正确的响应的机会，不要将编写明确提示与编写简短提示混淆，因为在很多情况下，更长的提示实际上提供了更多的清晰度和上下文，这实际上可以得到更详细与之相关的输出。
 
+用于测试的代码：
+```python
+import openai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+openai.api_key = os.getenv("OPEN_API_KEY")
+
+def get_completion(prompt, model = "gpt-3.5-turbo"):
+    messages = [{"role": "user", "content": prompt}]
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0,
+    )
+    return response.choices[0].message["content"]
+```
+
 ## Tactic 1: Use delimiters
 
 帮助您编写明确和具体的指令的第一个策略是使用分隔符清楚地指示输入的不同部分。
@@ -135,3 +155,28 @@ print (response)
 Completion for Text 2:
 No steps provided.
 ```
+
+## Tactic 4: Few-shot prompting
+
+少量训练提示，这是在要求模型执行任务之前，提供成功执行任务的示例。
+
+Give successful examples of completing tasks Then ask model to perform the task.
+
+接下来看示例：
+```python
+prompt = f"""
+Your task is to answer in a consistent style. 
+<child>: Teach me about patience.
+<grandparent>: The river that carves the deepest valley flows from a modest spring; the grandest symphony originates from a single note; the most intricate tapestry begins with a solitary thread.
+<child>: Teach me about resilience.
+"""
+response = get_completion(prompt)
+print(response)
+```
+我们告诉模型它的任务是以一致的风格回答问题，所以我们有一个孩子和祖母之间的对话的例子；孩子说“教我耐心”，祖父母用这些比喻来回答。下面孩子又问“教我韧性”，因为有了上面少量训练的例子，它将以类似的预期回答下一个指令。
+
+下面是结果：
+```text
+<grandparent>: Resilience is like a tree that bends with the wind but never breaks. It is the ability to bounce back from adversity and keep moving forward, even when faced with challenges and setbacks. Just like a tree, we must have strong roots and a solid foundation to weather any storm that comes our way.
+```
+韧性就像一棵树，它会随风弯曲，但永远不会折断。它是一种从逆境中恢复过来并继续前进的能力，即使在面临挑战和挫折时也是如此。就像一棵树一样，我们必须有牢固的根和坚实的基础来抵御任何风暴。
